@@ -11,44 +11,35 @@ permissions:
   pages: write
   id-token: write
 
-env:
-  GITHUB_PAGES: true
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    outputs:
-      ready: ${{ steps.check.outputs.ready }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Validar archivos de publicación
-        id: check
-        shell: bash
-        run: |
-          if [ -f index.html ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "index.html todavía no existe; se omite el despliegue."
-          fi
-
   deploy:
-    needs: validate
-    if: needs.validate.outputs.ready == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Validar sitio
+        shell: bash
+        run: |
+          test -f index.html
+          grep -qi '<!doctype html' index.html
+          echo "index.html listo para publicar"
+
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
+
       - name: Subir artefacto del sitio
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
+
       - name: Publicar en GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
