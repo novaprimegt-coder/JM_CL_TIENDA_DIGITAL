@@ -1,4 +1,4 @@
-name: Diagnostico JM Cruz L. Digital
+name: Deploy JM Cruz L. Digital
 
 on:
   push:
@@ -6,9 +6,40 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
-  test:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Verificar GitHub Actions
-        run: echo "GitHub Actions operativo"
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validar sitio
+        shell: bash
+        run: |
+          test -f index.html
+          grep -qi '<!doctype html' index.html
+          echo "index.html listo para publicar"
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir artefacto del sitio
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: '.'
+
+      - name: Publicar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
