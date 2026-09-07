@@ -12,34 +12,31 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validar sitio
+      - name: Validar index.html
         shell: bash
         run: |
           test -f index.html
           grep -qi '<!doctype html' index.html
-          echo "index.html listo para publicar"
+          echo "Sitio listo para publicar"
 
-      - name: Configurar GitHub Pages
+      - name: Configurar Pages
         uses: actions/configure-pages@v5
 
-      - name: Subir artefacto del sitio
+      - name: Empaquetar sitio
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
 
-      - name: Publicar en GitHub Pages
+      - name: Publicar sitio
         id: deployment
         uses: actions/deploy-pages@v4
